@@ -2,3 +2,6 @@ spring:
   data:
     mongodb:
       uri: mongodb+srv://${DB_USER:admin}:${DB_PASSWORD}@webflux-api-cluster.oobmcft.mongodb.net/${DB_NAME:webflux-api}?retryWrites=true&w=majority
+      auto-index-creation: true
+  application:
+    name: webflux-api
