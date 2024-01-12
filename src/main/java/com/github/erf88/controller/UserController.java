@@ -1,5 +1,7 @@
 package com.github.erf88.controller;
 
+import com.github.erf88.model.request.UserRequest;
+import com.github.erf88.model.response.UserResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
@@ -21,4 +23,5 @@ public interface UserController {
 
     @DeleteMapping(value = "/{id}")
     ResponseEntity<Mono<Void>> delete(@PathVariable String id);
+
 }
