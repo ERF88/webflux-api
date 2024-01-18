@@ -40,14 +40,20 @@ class UserControllerImplTest {
     @MockBean
     private MongoClient mongoClient;
 
+    public static final String ID = "123";
+    public static final String URI = "/users";
+    public static final String NAME = "usuario";
+    public static final String EMAIL = "usuario@email.com";
+    public static final String PASSWORD = "usuario123";
+
     @DisplayName("Test endpoint save with success")
     @Test
     void testSaveWithSuccess() {
-        final UserRequest request = new UserRequest("usuario", "usuario@email.com", "usuario123");
+        final UserRequest request = new UserRequest(NAME, EMAIL, PASSWORD);
         when(service.save(any(UserRequest.class))).thenReturn(Mono.just(User.builder().build()));
 
         webTestClient.post()
-                .uri("/users")
+                .uri(URI)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(BodyInserters.fromValue(request))
                 .exchange()
@@ -59,32 +65,32 @@ class UserControllerImplTest {
     @DisplayName("Test endpoint save with bad request")
     @Test
     void testSaveWithBadRequest() {
-        expectValidation(new UserRequest(" usuario", "usuario@email.com", "usuario123"))
+        expectValidation(new UserRequest(NAME.concat(" "), EMAIL, PASSWORD))
                 .jsonPath("$.errors[0].fieldName").isEqualTo("name")
                 .jsonPath("$.errors[0].message").isEqualTo("field cannot have black spaces at the beginning or at end");
 
-        expectValidation(new UserRequest("u", "usuario@email.com", "usuario123"))
+        expectValidation(new UserRequest("u", EMAIL, PASSWORD))
                 .jsonPath("$.errors[0].fieldName").isEqualTo("name")
                 .jsonPath("$.errors[0].message").isEqualTo("must be between 3 and 50 characters");
 
-        expectValidation(new UserRequest(null, "usuario@email.com", "usuario123"))
+        expectValidation(new UserRequest(null, EMAIL, PASSWORD))
                 .jsonPath("$.errors[0].fieldName").isEqualTo("name")
                 .jsonPath("$.errors[0].message").isEqualTo("must not be null or empty");
 
-        expectValidation(new UserRequest("usuario", "usuarioemail.com", "usuario123"))
+        expectValidation(new UserRequest(NAME, EMAIL.replace("@", ""), PASSWORD))
                 .jsonPath("$.errors[0].fieldName").isEqualTo("email")
                 .jsonPath("$.errors[0].message").isEqualTo("invalid email");
     }
 
     private WebTestClient.BodyContentSpec expectValidation(UserRequest request) {
         return webTestClient.post()
-                .uri("/users")
+                .uri(URI)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(BodyInserters.fromValue(request))
                 .exchange()
                 .expectStatus().isBadRequest()
                 .expectBody()
-                .jsonPath("$.path").isEqualTo("/users")
+                .jsonPath("$.path").isEqualTo(URI)
                 .jsonPath("$.status").isEqualTo(BAD_REQUEST.value())
                 .jsonPath("$.error").isEqualTo("Validation error")
                 .jsonPath("$.message").isEqualTo("Error on validation attributes");
@@ -93,21 +99,20 @@ class UserControllerImplTest {
     @DisplayName("Test endpoint find by id with success")
     @Test
     void testFindByIdWithSuccess() {
-        final String id = "123";
-        final UserResponse userResponse = new UserResponse(id, "usuario", "usuario@email.com", "usuario123");
+        final UserResponse userResponse = new UserResponse(ID, NAME, EMAIL, PASSWORD);
         when(service.findById(anyString())).thenReturn(Mono.just(User.builder().build()));
         when(mapper.toResponse(any(User.class))).thenReturn(userResponse);
 
         webTestClient.get()
-                .uri("/users/" + id)
+                .uri(URI.concat("/").concat(ID))
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
-                .jsonPath("$.id").isEqualTo(id)
-                .jsonPath("$.name").isEqualTo("usuario")
-                .jsonPath("$.email").isEqualTo("usuario@email.com")
-                .jsonPath("$.password").isEqualTo("usuario123");
+                .jsonPath("$.id").isEqualTo(ID)
+                .jsonPath("$.name").isEqualTo(NAME)
+                .jsonPath("$.email").isEqualTo(EMAIL)
+                .jsonPath("$.password").isEqualTo(PASSWORD);
 
         verify(service, times(1)).findById(anyString());
         verify(mapper, times(1)).toResponse(any(User.class));
