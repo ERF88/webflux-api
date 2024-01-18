@@ -1,5 +1,6 @@
 package com.github.erf88.controller.exceptions;
 
+import com.github.erf88.service.exception.ObjectNotFoundException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -16,6 +17,7 @@ import reactor.core.publisher.Mono;
 import java.time.OffsetDateTime;
 
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @ControllerAdvice
 public class ControllerExceptionHandler extends ResponseEntityExceptionHandler {
@@ -29,6 +31,12 @@ public class ControllerExceptionHandler extends ResponseEntityExceptionHandler {
             message = "Duplicate key exception";
         }
         StandardError standardError = getStandardError(BAD_REQUEST.value(), BAD_REQUEST.getReasonPhrase(), message, request.getPath().toString());
+        return Mono.just(ResponseEntity.badRequest().body(standardError));
+    }
+
+    @ExceptionHandler(ObjectNotFoundException.class)
+    public Mono<ResponseEntity<StandardError>> handleObjectNotFoundException(final ObjectNotFoundException ex, final ServerHttpRequest request) {
+        StandardError standardError = getStandardError(NOT_FOUND.value(), NOT_FOUND.getReasonPhrase(), ex.getMessage(), request.getPath().toString());
         return Mono.just(ResponseEntity.badRequest().body(standardError));
     }
 
