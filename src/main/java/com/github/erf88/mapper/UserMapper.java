@@ -2,6 +2,7 @@ package com.github.erf88.mapper;
 
 import com.github.erf88.entity.User;
 import com.github.erf88.model.request.UserRequest;
+import com.github.erf88.model.response.UserResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -17,5 +18,7 @@ public interface UserMapper {
 
     @Mapping(target = "id", ignore = true)
     User toEntity(final UserRequest request);
+
+    UserResponse toResponse(final User entity);
 
 }
