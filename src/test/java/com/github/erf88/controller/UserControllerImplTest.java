@@ -22,6 +22,7 @@ import reactor.core.publisher.Mono;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
 
 @AutoConfigureWebTestClient
 @ExtendWith(SpringExtension.class)
@@ -51,10 +52,29 @@ class UserControllerImplTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(BodyInserters.fromValue(request))
                 .exchange()
-                .expectStatus()
-                .isCreated();
+                .expectStatus().isCreated();
 
         verify(service, times(1)).save(any(UserRequest.class));
+    }
+
+    @DisplayName("Test endpoint save with bad request")
+    @Test
+    void testSaveWithBadRequest() {
+        final UserRequest request = new UserRequest(" usuario", "usuario@email.com", "usuario123");
+
+        webTestClient.post()
+                .uri("/users")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(BodyInserters.fromValue(request))
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.path").isEqualTo("/users")
+                .jsonPath("$.status").isEqualTo(BAD_REQUEST.value())
+                .jsonPath("$.error").isEqualTo("Validation error")
+                .jsonPath("$.message").isEqualTo("Error on validation attributes")
+                .jsonPath("$.errors[0].fieldName").isEqualTo("name")
+                .jsonPath("$.errors[0].message").isEqualTo("field cannot have black spaces at the beginning or at end");
     }
 
     @Test
