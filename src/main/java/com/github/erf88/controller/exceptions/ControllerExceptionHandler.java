@@ -37,7 +37,7 @@ public class ControllerExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(ObjectNotFoundException.class)
     public Mono<ResponseEntity<StandardError>> handleObjectNotFoundException(final ObjectNotFoundException ex, final ServerHttpRequest request) {
         StandardError standardError = getStandardError(NOT_FOUND.value(), NOT_FOUND.getReasonPhrase(), ex.getMessage(), request.getPath().toString());
-        return Mono.just(ResponseEntity.badRequest().body(standardError));
+        return Mono.just(ResponseEntity.status(NOT_FOUND).body(standardError));
     }
 
     @Override

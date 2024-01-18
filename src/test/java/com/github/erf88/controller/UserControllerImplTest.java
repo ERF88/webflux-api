@@ -5,6 +5,7 @@ import com.github.erf88.mapper.UserMapper;
 import com.github.erf88.model.request.UserRequest;
 import com.github.erf88.model.response.UserResponse;
 import com.github.erf88.service.UserService;
+import com.github.erf88.service.exception.ObjectNotFoundException;
 import com.mongodb.reactivestreams.client.MongoClient;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -22,6 +23,7 @@ import reactor.core.publisher.Mono;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @AutoConfigureWebTestClient
 @ExtendWith(SpringExtension.class)
@@ -94,6 +96,27 @@ class UserControllerImplTest {
                 .jsonPath("$.status").isEqualTo(BAD_REQUEST.value())
                 .jsonPath("$.error").isEqualTo("Validation error")
                 .jsonPath("$.message").isEqualTo("Error on validation attributes");
+    }
+
+    @DisplayName("Test endpoint find by id with not found")
+    @Test
+    void testFindByIdWithNotFound() {
+        final String message = "Object not found. Id: %s, Type: %s".formatted(ID, User.class.getSimpleName());
+        final String uri = URI.concat("/").concat(ID);
+        when(service.findById(anyString())).thenThrow(new ObjectNotFoundException(message));
+
+        webTestClient.get()
+                .uri(uri)
+                .accept(MediaType.APPLICATION_JSON)
+                .exchange()
+                .expectStatus().isNotFound()
+                .expectBody()
+                .jsonPath("$.path").isEqualTo(uri)
+                .jsonPath("$.status").isEqualTo(NOT_FOUND.value())
+                .jsonPath("$.error").isEqualTo(NOT_FOUND.getReasonPhrase())
+                .jsonPath("$.message").isEqualTo(message);
+
+        verify(service, times(1)).findById(anyString());
     }
 
     @DisplayName("Test endpoint find by id with success")
