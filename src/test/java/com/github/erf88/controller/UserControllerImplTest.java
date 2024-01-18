@@ -164,8 +164,28 @@ class UserControllerImplTest {
         verify(mapper, times(1)).toResponse(any(User.class));
     }
 
+    @DisplayName("Test update endpoint with success")
     @Test
-    void update() {
+    void testUpdateWithSuccess() {
+        final UserRequest request = new UserRequest(NAME, EMAIL, PASSWORD);
+        final UserResponse userResponse = new UserResponse(ID, NAME, EMAIL, PASSWORD);
+        when(service.update(anyString(), any(UserRequest.class))).thenReturn(Mono.just(User.builder().build()));
+        when(mapper.toResponse(any(User.class))).thenReturn(userResponse);
+
+        webTestClient.patch()
+                .uri(URI.concat("/").concat(ID))
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(BodyInserters.fromValue(request))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.id").isEqualTo(ID)
+                .jsonPath("$.name").isEqualTo(NAME)
+                .jsonPath("$.email").isEqualTo(EMAIL)
+                .jsonPath("$.password").isEqualTo(PASSWORD);
+
+        verify(service, times(1)).update(anyString(), any(UserRequest.class));
+        verify(mapper, times(1)).toResponse(any(User.class));
     }
 
     @Test
