@@ -18,6 +18,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.reactive.function.BodyInserters;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -48,7 +49,7 @@ class UserControllerImplTest {
     public static final String EMAIL = "usuario@email.com";
     public static final String PASSWORD = "usuario123";
 
-    @DisplayName("Test endpoint save with success")
+    @DisplayName("Test save endpoint with success")
     @Test
     void testSaveWithSuccess() {
         final UserRequest request = new UserRequest(NAME, EMAIL, PASSWORD);
@@ -64,7 +65,7 @@ class UserControllerImplTest {
         verify(service, times(1)).save(any(UserRequest.class));
     }
 
-    @DisplayName("Test endpoint save with bad request")
+    @DisplayName("Test save endpoint with bad request")
     @Test
     void testSaveWithBadRequest() {
         expectValidation(new UserRequest(NAME.concat(" "), EMAIL, PASSWORD))
@@ -98,28 +99,7 @@ class UserControllerImplTest {
                 .jsonPath("$.message").isEqualTo("Error on validation attributes");
     }
 
-    @DisplayName("Test endpoint find by id with not found")
-    @Test
-    void testFindByIdWithNotFound() {
-        final String message = "Object not found. Id: %s, Type: %s".formatted(ID, User.class.getSimpleName());
-        final String uri = URI.concat("/").concat(ID);
-        when(service.findById(anyString())).thenThrow(new ObjectNotFoundException(message));
-
-        webTestClient.get()
-                .uri(uri)
-                .accept(MediaType.APPLICATION_JSON)
-                .exchange()
-                .expectStatus().isNotFound()
-                .expectBody()
-                .jsonPath("$.path").isEqualTo(uri)
-                .jsonPath("$.status").isEqualTo(NOT_FOUND.value())
-                .jsonPath("$.error").isEqualTo(NOT_FOUND.getReasonPhrase())
-                .jsonPath("$.message").isEqualTo(message);
-
-        verify(service, times(1)).findById(anyString());
-    }
-
-    @DisplayName("Test endpoint find by id with success")
+    @DisplayName("Test find by id endpoint with success")
     @Test
     void testFindByIdWithSuccess() {
         final UserResponse userResponse = new UserResponse(ID, NAME, EMAIL, PASSWORD);
@@ -141,8 +121,47 @@ class UserControllerImplTest {
         verify(mapper, times(1)).toResponse(any(User.class));
     }
 
+    @DisplayName("Test find by id endpoint with not found")
     @Test
-    void findAll() {
+    void testFindByIdWithNotFound() {
+        final String message = "Object not found. Id: %s, Type: %s".formatted(ID, User.class.getSimpleName());
+        final String uri = URI.concat("/").concat(ID);
+        when(service.findById(anyString())).thenThrow(new ObjectNotFoundException(message));
+
+        webTestClient.get()
+                .uri(uri)
+                .accept(MediaType.APPLICATION_JSON)
+                .exchange()
+                .expectStatus().isNotFound()
+                .expectBody()
+                .jsonPath("$.path").isEqualTo(uri)
+                .jsonPath("$.status").isEqualTo(NOT_FOUND.value())
+                .jsonPath("$.error").isEqualTo(NOT_FOUND.getReasonPhrase())
+                .jsonPath("$.message").isEqualTo(message);
+
+        verify(service, times(1)).findById(anyString());
+    }
+
+    @DisplayName("Test find all endpoint with success")
+    @Test
+    void testFindAllWithSuccess() {
+        final UserResponse userResponse = new UserResponse(ID, NAME, EMAIL, PASSWORD);
+        when(service.findAll()).thenReturn(Flux.just(User.builder().build()));
+        when(mapper.toResponse(any(User.class))).thenReturn(userResponse);
+
+        webTestClient.get()
+                .uri(URI)
+                .accept(MediaType.APPLICATION_JSON)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.[0].id").isEqualTo(ID)
+                .jsonPath("$.[0].name").isEqualTo(NAME)
+                .jsonPath("$.[0].email").isEqualTo(EMAIL)
+                .jsonPath("$.[0].password").isEqualTo(PASSWORD);
+
+        verify(service, times(1)).findAll();
+        verify(mapper, times(1)).toResponse(any(User.class));
     }
 
     @Test
