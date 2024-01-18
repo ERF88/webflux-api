@@ -3,7 +3,6 @@ package com.github.erf88.controller.exceptions;
 import com.github.erf88.service.exception.ObjectNotFoundException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.server.reactive.ServerHttpRequest;

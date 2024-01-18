@@ -188,8 +188,17 @@ class UserControllerImplTest {
         verify(mapper, times(1)).toResponse(any(User.class));
     }
 
+    @DisplayName("Test delete endpoint with success")
     @Test
-    void delete() {
+    void testDeleteWithSuccess() {
+        when(service.delete(anyString())).thenReturn(Mono.just(User.builder().build()));
+
+        webTestClient.delete()
+                .uri(URI.concat("/").concat(ID))
+                .exchange()
+                .expectStatus().isOk();
+
+        verify(service, times(1)).delete(anyString());
     }
 
 }
