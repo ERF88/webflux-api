@@ -4,6 +4,8 @@ import com.github.erf88.entity.User;
 import com.github.erf88.mapper.UserMapper;
 import com.github.erf88.model.request.UserRequest;
 import com.github.erf88.repository.UserRepository;
+import com.github.erf88.service.exception.ObjectNotFoundException;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -110,6 +112,15 @@ class UserServiceTest {
                 .verify();
 
         verify(repository, times(1)).findAndRemove(anyString());
+    }
+
+    @Test
+    void testHandleNotFound() {
+        when(repository.findById(anyString())).thenReturn(Mono.empty());
+        final String id = "123";
+
+        ObjectNotFoundException result = assertThrows(ObjectNotFoundException.class, () -> userService.findById(id).block());
+        assertEquals("Object not found. Id: %s, Type: %s".formatted(id, User.class.getSimpleName()), result.getMessage());
     }
 
 }
