@@ -46,9 +46,7 @@ public class ControllerExceptionHandler extends ResponseEntityExceptionHandler {
         final String message = "Error on validation attributes";
 
         ValidationError validationError = new ValidationError(timestamp, path, status, error, message);
-
         ex.getBindingResult().getFieldErrors().forEach(e -> validationError.addError(e.getField(), e.getDefaultMessage()));
-
         return Mono.just(ResponseEntity.badRequest().body(validationError));
     }
 
