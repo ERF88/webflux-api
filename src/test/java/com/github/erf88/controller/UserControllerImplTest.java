@@ -44,7 +44,7 @@ class UserControllerImplTest {
     private MongoClient mongoClient;
 
     public static final String ID = "123";
-    public static final String URI = "/users";
+    public static final String BASE_URI = "/users";
     public static final String NAME = "usuario";
     public static final String EMAIL = "usuario@email.com";
     public static final String PASSWORD = "usuario123";
@@ -56,7 +56,7 @@ class UserControllerImplTest {
         when(service.save(any(UserRequest.class))).thenReturn(Mono.just(User.builder().build()));
 
         webTestClient.post()
-                .uri(URI)
+                .uri(BASE_URI)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(BodyInserters.fromValue(request))
                 .exchange()
@@ -87,13 +87,13 @@ class UserControllerImplTest {
 
     private WebTestClient.BodyContentSpec expectValidation(UserRequest request) {
         return webTestClient.post()
-                .uri(URI)
+                .uri(BASE_URI)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(BodyInserters.fromValue(request))
                 .exchange()
                 .expectStatus().isBadRequest()
                 .expectBody()
-                .jsonPath("$.path").isEqualTo(URI)
+                .jsonPath("$.path").isEqualTo(BASE_URI)
                 .jsonPath("$.status").isEqualTo(BAD_REQUEST.value())
                 .jsonPath("$.error").isEqualTo("Validation error")
                 .jsonPath("$.message").isEqualTo("Error on validation attributes");
@@ -107,7 +107,7 @@ class UserControllerImplTest {
         when(mapper.toResponse(any(User.class))).thenReturn(userResponse);
 
         webTestClient.get()
-                .uri(URI.concat("/").concat(ID))
+                .uri(BASE_URI.concat("/").concat(ID))
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
@@ -125,7 +125,7 @@ class UserControllerImplTest {
     @Test
     void testFindByIdWithNotFound() {
         final String message = "Object not found. Id: %s, Type: %s".formatted(ID, User.class.getSimpleName());
-        final String uri = URI.concat("/").concat(ID);
+        final String uri = BASE_URI.concat("/").concat(ID);
         when(service.findById(anyString())).thenThrow(new ObjectNotFoundException(message));
 
         webTestClient.get()
@@ -150,7 +150,7 @@ class UserControllerImplTest {
         when(mapper.toResponse(any(User.class))).thenReturn(userResponse);
 
         webTestClient.get()
-                .uri(URI)
+                .uri(BASE_URI)
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
@@ -173,7 +173,7 @@ class UserControllerImplTest {
         when(mapper.toResponse(any(User.class))).thenReturn(userResponse);
 
         webTestClient.patch()
-                .uri(URI.concat("/").concat(ID))
+                .uri(BASE_URI.concat("/").concat(ID))
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(BodyInserters.fromValue(request))
                 .exchange()
@@ -194,7 +194,7 @@ class UserControllerImplTest {
         when(service.delete(anyString())).thenReturn(Mono.just(User.builder().build()));
 
         webTestClient.delete()
-                .uri(URI.concat("/").concat(ID))
+                .uri(BASE_URI.concat("/").concat(ID))
                 .exchange()
                 .expectStatus().isOk();
 
